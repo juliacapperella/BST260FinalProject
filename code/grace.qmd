@@ -1,0 +1,41 @@
+
+
+LOAD DATA
+```{r}
+#POPULATION DATA
+setwd(getwd())
+source("census-key.R")
+url <- "https://api.census.gov/data/2021/pep/population"
+library(httr2)
+request <- request(url)|> req_url_query(get = I("POP_2020,POP_2021,NAME"), `for` = I("state:*"), key = census_key)
+print(request$url)
+response <- request |> req_perform()
+response
+resp_content_type(response)
+population <- response |> resp_body_json(simplifyVector = TRUE) 
+
+#COVID DATA
+api <- "https://data.cdc.gov/resource/pwn4-m3yp.json"
+
+covid_data <- request(api) %>%
+  req_perform() %>%
+  resp_body_string() %>%
+  fromJSON() 
+
+str(covid_data)
+
+covid_df <- covid_data %>%
+  mutate(
+    tot_cases = as.numeric(tot_cases),
+    new_cases = as.numeric(new_cases),
+    tot_deaths = as.numeric(tot_deaths),
+    new_deaths = as.numeric(new_deaths),
+    new_historic_cases = as.numeric(new_historic_cases),
+    new_historic_deaths = as.numeric(new_historic_deaths),
+    date_updated = as.Date(date_updated),
+    start_date = as.Date(start_date),
+    end_date = as.Date(end_date)
+  ) %>%
+  rename(state_abb = state)
+```
+
