@@ -1,0 +1,14 @@
+
+```{r}
+setwd(getwd())
+source("census-key.R")
+url <- "https://api.census.gov/data/2021/pep/population"
+library(httr2)
+request <- request(url)|> req_url_query(get = I("POP_2020,POP_2021,NAME"), `for` = I("state:*"), key = census_key)
+print(request$url)
+response <- request |> req_perform()
+response
+resp_content_type(response)
+population <- response |> resp_body_json(simplifyVector = TRUE) 
+```
+
