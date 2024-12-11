@@ -66,7 +66,6 @@ full_pop <- population |>
 
 
 #COVID DATA
-#COVID DATA
 
 get_cdc_data <- function(url,limit=1000000000) {
   require(httr2)
@@ -111,9 +110,132 @@ covid_df <- covid_df %>%
 
 
 
+DATA VIZ 
+```{r}
+#Population by state
+full_pop %>%
+  ggplot(aes(x = reorder(state, population), y = population, fill = state)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Population by State",
+       x = "State", 
+       y = "Population") +
+  coord_flip() + # flip coordinates
+  facet_wrap(~ year) +   # facet by year
+  theme_minimal() +
+  theme(axis.text.y = element_blank())  
+```
+
+```{r}
+#Time series plot faceted by region
+covid_df %>%
+  mutate(cases_per_100k = new_cases/population*100000) %>%
+  filter(state_name != "NA") %>%
+  ggplot(aes(x = end_date, y = cases_per_100k, color = state_name))+
+  geom_line(show.legend = FALSE) +
+  facet_wrap(~region_name) +
+  labs(title = "Time Series of Covid Cases per 100,000 in Each Region",
+       x = "Date",
+       y = "Cases per 100k") +
+  theme(axis.text.x = element_text(angle = 80, vjust = 0.7, hjust=0.7))
+  
+```
+```{r}
+#Time series not faceted
+covid_df %>%
+  mutate(cases_per_100k = new_cases/population*100000) %>%
+  filter(state_name != "NA") %>%
+  ggplot(aes(x = end_date, y = cases_per_100k))+
+  geom_line(show.legend = FALSE) +
+  labs(title = "Time Series of Covid Cases per 100,000 in Each Region",
+       x = "Date",
+       y = "Cases per 100k") +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") + 
+  theme(axis.text.x = element_text(angle = 80, vjust = 0.7, hjust=0.7))
+  
+```
 
 
+Wave 1: March 2020 - June 2020
+```{r}
+#Death rate March 2020 to June 2020 by state
+covid_df %>%
+  filter(year(start_date) %in% c(2020)) %>%
+  filter(month(start_date) %in% c(3, 4, 5, 6)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+         
+```
 
+Wave 2: July 2020 - Aug 2020
+```{r}
+#Death rate by state for July 2020 - Aug 2020
+covid_df %>%
+  filter(year(start_date) %in% c(2020)) %>%
+  filter(month(start_date) %in% c(7, 8)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
 
+Wave 3: September 2020 - Feb 2021
+```{r}
+#Death rate by state for September 2020 - Feb 2021
+covid_df %>%
+  filter(year(start_date) == 2020 & month(start_date) >= 9 |
+           year(start_date) == 2021 & month(start_date) <= 2) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+Wave 4: March 2021 - June 2021
+```{r}
+#Death rate per 100k March 2021 - June 2021
+covid_df %>%
+  filter(year(start_date) %in% c(2021)) %>%
+  filter(month(start_date) %in% c(3, 4, 5, 6)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+Wave 5: July 2021 - Dec 2021
+```{r}
+#Death rate per 100k July 2021 to Dec 2021
+covid_df %>%
+  filter(year(start_date) %in% c(2021)) %>%
+  filter(month(start_date) %in% c(7:12)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+Wave 6: Jan 2022 - March 2022
+```{r}
+#Death rate per 100k jan 2022 - march 2022
+covid_df %>%
+  filter(year(start_date) %in% c(2022)) %>%
+  filter(month(start_date) %in% c(1:3)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+Wave 7: Apr 2022 - Oct 2022
+```{r}
+#death rate per 100k apr 2022 to oct 2022
+covid_df %>%
+  filter(year(start_date) %in% c(2022)) %>%
+  filter(month(start_date) %in% c(4:10)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+Wave 8: Nov 2022 - July 2023
+
+```{r}
+#Death rate per 100k nov 2022 to july 2023
+covid_df %>%
+  filter(year(start_date) == 2022 & month(start_date) >= 11 |
+           year(start_date) == 2023 & month(start_date) <= 7) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+Over time and through each period, COVID because more virulent. The cases increased significantly throughout each wave, even taking into the fact that each wave are different lengths of time. 
 
 
