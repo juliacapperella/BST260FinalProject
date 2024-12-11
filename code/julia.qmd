@@ -1,0 +1,127 @@
+```{r}
+library(httr2)
+library(janitor)
+library(stringr)
+library(tidyverse)
+library(purrr)
+library(jsonlite)
+library(lubridate)
+```
+
+```{r warning = FALSE}
+
+#POPULATION DATA
+setwd(getwd())
+source("census-key.R")
+url <- "https://api.census.gov/data/2021/pep/population"
+
+request <- request(url)|> req_url_query(get = I("POP_2020,POP_2021,NAME"), `for` = I("state:*"), 
+                                        key = census_key)
+print(request$url)
+response <- request |> req_perform()
+population <- response |> resp_body_json(simplifyVector = TRUE) 
+
+
+population <- population %>%
+  row_to_names(row_number = 1) %>%
+  as_tibble() %>%   # convert to tibble
+  select(-state) %>%   # remove stat column
+  rename(state_name = NAME) %>% # rename state column to state_name
+  pivot_longer(cols = -state_name, 
+               names_to = "year",
+               values_to = "population") %>%   # use pivot_longer to tidy
+   mutate(year = str_remove(year, "POP_"), # remove POP_ from year
+          across(-state_name, as.numeric),   # parse all relevant columns to numeric
+          state = state.abb[match(state_name, state.name)], # add state abbreviations using state.abb
+          state = case_when(state_name == "Puerto Rico" ~ "PR", 
+                           state_name == "District of Columbia" ~ "DC", 
+                           TRUE ~ state)) # use case_when to add abbreviations for DC and PR
+
+
+url2 <- "https://github.com/datasciencelabs/2024/raw/refs/heads/main/data/regions.json"
+regions<- fromJSON(url2, simplifyDataFrame = FALSE) # regions <- use jsonlit JSON parser 
+regions <- map_df(regions, function(x) data.frame(region = x$region, 
+                                       region_name = x$region_name, 
+                                       state_name = x$states))
+regions <- regions %>%
+   mutate(region_name = ifelse(region_name == "New York and New Jersey, Puerto Rico, Virgin Islands", "NY&NJ, PR, VI", region_name))
+
+population <- population %>%
+  left_join(regions, by = "state_name")
+
+full_pop <- population |> 
+  group_by(state_name, year) |> 
+  pivot_wider(names_from = year, values_from = population) |>
+  rename(c(y2020 = "2020", y2021 = "2021")) |>
+  mutate(growth_rate = (y2021 - y2020) / y2020) |>
+  mutate(y2022 = y2021 * (1+growth_rate)) |>
+  mutate(y2023 = y2022 * (1+growth_rate)) |>
+  mutate(y2024 = y2023 * (1+growth_rate)) |>
+  select(-growth_rate) |>
+  pivot_longer(-c(state_name, state, region, region_name), names_to = "year", values_to = "population") |>
+  ungroup() |>
+  mutate(year = str_remove(year, "y")) |>
+  mutate(year = as.numeric(year))
+ 
+saveRDS(full_pop, "../data/pop.rds") # save an RDS file in the data directory
+  
+#COVID DATA
+
+get_cdc_data <- function(url,limit=1000000000) {
+  require(httr2)
+  ret <- request(url) |> # create request
+    req_url_query("$limit" = limit) |> # increase the download limit
+    req_perform() |> # perform request
+    resp_body_json(simplifyVector = TRUE) # extract the json
+  return(ret) # return the data
+}
+
+cases_raw <- get_cdc_data("https://data.cdc.gov/resource/pwn4-m3yp.json") # cases data
+
+## Wrangle cases
+cases <- cases_raw |> 
+  mutate(cases = parse_number(new_cases), date = as_date(ymd_hms(end_date))) |> # convert cases to numeric and date to date class
+  filter(state %in% population$state) |> # keep only jurisdictions included in the population data frame
+  mutate(mmwr_week = epiweek(date), mmwr_year = epiyear(date)) |> # add columns for the corresponding epiweek and epiyear
+  select(state, mmwr_year, mmwr_week, cases) |> # keep only state, epiyear, epiweek, and cases in the cases data frame
+  arrange(state, mmwr_year, mmwr_week) # reorder the columns
+
+# Join cases and population data
+all_dates <- data.frame(date = seq(make_date(2020, 1, 25),
+                                   make_date(2024, 12, 31), 
+                                   by = "week")) |>
+  mutate(date = ceiling_date(date, unit = "week", week_start = 7) - days(1)) |>
+  mutate(mmwr_year = epiyear(date), mmwr_week = epiweek(date)) 
+
+dates_and_pop <- cross_join(all_dates, data.frame(state = unique(full_pop$state))) |> 
+  left_join(full_pop, by = c("state", "mmwr_year" = "year"))
+
+dat <- dates_and_pop |> left_join(cases, by = c("state", "mmwr_year", "mmwr_week")) |> # join cases with the dates and population data frame
+  arrange(state, date) # reorder the data frame
+saveRDS(dat, "../data/cases_with_pop.rds") # save an RDS file in the data directory
+
+```
+
+Extra Covid Stuff
+```{r}
+## Full Covid data
+covid_df <- cases_raw %>%
+  mutate(
+    tot_cases = as.numeric(tot_cases),
+    new_cases = as.numeric(new_cases),
+    tot_deaths = as.numeric(tot_deaths),
+    new_deaths = as.numeric(new_deaths),
+    new_historic_cases = as.numeric(new_historic_cases),
+    new_historic_deaths = as.numeric(new_historic_deaths),
+    date_updated = as.Date(date_updated),
+    start_date = as.Date(start_date),
+    end_date = as.Date(end_date)
+  ) 
+
+covid_df <- covid_df %>%
+  full_join(full_pop, by = "state")
+
+hosp_raw <- get_cdc_data("https://data.cdc.gov/resource/39z2-9zu6.json") # hospitalizations data
+deaths_raw <- get_cdc_data("https://data.cdc.gov/resource/r8kw-7aab.json") # deaths data
+vax_raw <- get_cdc_data("https://data.cdc.gov/resource/rh2h-3yt2.json") # vaccinations data
+```
