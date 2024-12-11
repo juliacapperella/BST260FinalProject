@@ -89,6 +89,8 @@ cases <- cases_raw |>
   select(state, mmwr_year, mmwr_week, cases) |> # keep only state, epiyear, epiweek, and cases in the cases data frame
   arrange(state, mmwr_year, mmwr_week) # reorder the columns
 
+
+
 ## Full Covid data
 covid_df <- cases_raw %>%
   mutate(
@@ -105,6 +107,21 @@ covid_df <- cases_raw %>%
 
 covid_df <- covid_df %>%
   full_join(full_pop, by = "state")
+
+#Excess deaths
+deaths_df <- deaths_raw %>%
+  mutate(percent_of_expected_deaths = as.numeric(percent_of_expected_deaths),
+         total_deaths = as.numeric(total_deaths)) %>%
+  mutate(expected_deaths = (percent_of_expected_deaths/100)*total_deaths,
+         excess_mort = total_deaths - expected_deaths) %>%
+  mutate(start_date = as.Date(start_date),
+         end_date = as.Date(end_date)) %>%
+  filter(state %in% covid_df$state_name) %>%
+  select(state, excess_mort, expected_deaths, start_date, end_date) %>%
+  rename(state_name = state)
+
+covid_df <- covid_df %>%
+  anti_join(deaths_df, by = "state_name")
 
 ```
 
