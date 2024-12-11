@@ -103,6 +103,5 @@ covid_df <- cases_raw %>%
 
 covid_df <- covid_df %>%
   full_join(population, by = "state_abb")
-
 ```
 
