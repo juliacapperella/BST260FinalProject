@@ -77,6 +77,9 @@ get_cdc_data <- function(url,limit=1000000000) {
 }
 
 cases_raw <- get_cdc_data("https://data.cdc.gov/resource/pwn4-m3yp.json") # cases data
+hosp_raw <- get_cdc_data("https://data.cdc.gov/resource/39z2-9zu6.json") # hospitalizations data
+deaths_raw <- get_cdc_data("https://data.cdc.gov/resource/r8kw-7aab.json") # deaths data
+vax_raw <- get_cdc_data("https://data.cdc.gov/resource/rh2h-3yt2.json") # vaccinations data
 
 ## Wrangle cases
 cases <- cases_raw |> 
@@ -85,6 +88,27 @@ cases <- cases_raw |>
   mutate(mmwr_week = epiweek(date), mmwr_year = epiyear(date)) |> # add columns for the corresponding epiweek and epiyear
   select(state, mmwr_year, mmwr_week, cases) |> # keep only state, epiyear, epiweek, and cases in the cases data frame
   arrange(state, mmwr_year, mmwr_week) # reorder the columns
+
+## Wrangle hosp
+hosp <- hosp_raw |> 
+  filter(jurisdiction %in% population$state) |>  # keep only jurisdictions included in the population data frame
+  rename(hosp = new_covid_19_hospital, state = jurisdiction) |> # rename the columns
+  mutate(hosp = as.numeric(hosp), date = as_date(ymd_hms(collection_date))) |> # convert hospitalizations to numeric and date to date class
+  mutate(mmwr_week = epiweek(date), mmwr_year = epiyear(date)) |> # add columns for the corresponding epiweek and epiyear
+  select(state, mmwr_year, mmwr_week, hosp) |> # keep only state, epiyear, epiweek and hospitalizations in the hosp data frame
+  group_by(state, mmwr_week, mmwr_year) |> # create groups to help collapse by week
+  summarize(hosp = sum(hosp, na.rm = TRUE), n = n(), .groups = "drop") |> # sum hospitalizations within a week
+  filter(n == 7) |> # remove weeks with fewer than 7 observations
+  select(-n) |> # remove the count column
+  arrange(state, mmwr_year, mmwr_week) # reorder the columns
+
+## Wrangle deaths
+deaths <- deaths_raw |> 
+  mutate(deaths = parse_number(covid_19_deaths)) |> # convert deaths to numeric
+  filter(state %in% population$state_name) |> # keep only jurisdictions included in the population data frame
+  mutate(mmwr_week = as.numeric(mmwr_week), mmwr_year = epiyear(ymd_hms(end_date))) |> # mutate/create columns for the corresponding epiweek and epiyear
+  select(state, mmwr_year, mmwr_week, deaths) |> # keep only state, epiyear, epiweek and deaths in the deaths data frame
+  arrange(state, mmwr_year, mmwr_week) # reorder the column
 
 # Join cases and population data
 all_dates <- data.frame(date = seq(make_date(2020, 1, 25),
@@ -97,8 +121,10 @@ dates_and_pop <- cross_join(all_dates, data.frame(state = unique(full_pop$state)
   left_join(full_pop, by = c("state", "mmwr_year" = "year"))
 
 dat <- dates_and_pop |> left_join(cases, by = c("state", "mmwr_year", "mmwr_week")) |> # join cases with the dates and population data frame
+  left_join(hosp, by = c("state", "mmwr_year", "mmwr_week")) |> # add hospitalizations
+  left_join(deaths, by = c("state_name" = "state", "mmwr_year", "mmwr_week")) |>
   arrange(state, date) # reorder the data frame
-saveRDS(dat, "../data/cases_with_pop.rds") # save an RDS file in the data directory
+saveRDS(dat, "../data/covid_with_pop.rds") # save an RDS file in the data directory
 
 ```
 
@@ -121,9 +147,64 @@ covid_df <- cases_raw %>%
 covid_df <- covid_df %>%
   full_join(full_pop, by = "state")
 
-hosp_raw <- get_cdc_data("https://data.cdc.gov/resource/39z2-9zu6.json") # hospitalizations data
-deaths_raw <- get_cdc_data("https://data.cdc.gov/resource/r8kw-7aab.json") # deaths data
-vax_raw <- get_cdc_data("https://data.cdc.gov/resource/rh2h-3yt2.json") # vaccinations data
+
 ```
+
+```{r}
+dat |> 
+  mutate(case_rate = cases / population * 100000, # calculate the rate of cases per 100,000 people
+        hosp_rate = hosp / population * 100000, # calculate the rate of hospitalizations per 100,000 people
+        death_rate = deaths / population * 100000) |> # calculate the rate of deaths per 100,000 people
+  group_by(date) |>
+  summarize(case_rate = mean(case_rate, na.rm = TRUE), 
+            hosp_rate = mean(hosp_rate, na.rm = TRUE),
+            death_rate = mean(death_rate, na.rm = TRUE),
+            .groups = "drop") |>
+  pivot_longer(cols = c("case_rate", "hosp_rate", "death_rate"), 
+               names_to = "type", values_to = "rates") |> # change the format of the table for plotting
+  ggplot(aes(x=date, y=rates)) + # create the plot with date on the x and rates on the y, colored by region and grouped by state
+  geom_line() + # add lines
+  labs(x = "Date", y ="Rate per 100,000 People", 
+       title = "Covid 19 Cases, Deaths and Hospitalizations per 100,000 People Over Time", 
+       color = "Region") +
+  facet_wrap(~type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
+```
+
+```{r}
+#Population by state
+full_pop %>%
+  ggplot(aes(x = reorder(state, population), y = population, fill = state)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Population by State",
+       x = "State", 
+       y = "Population") +
+  coord_flip() + # flip coordinates
+  facet_wrap(~ year) +   # facet by year
+  theme_minimal() +
+  theme(axis.text.y = element_blank())  
+#Time series plot faceted by region
+covid_df %>%
+  mutate(cases_per_100k = new_cases/population*100000) %>%
+  filter(state_name != "NA") %>%
+  ggplot(aes(x = end_date, y = cases_per_100k, color = state_name))+
+  geom_line(show.legend = FALSE) +
+  facet_wrap(~region_name) +
+  labs(title = "Time Series of Covid Cases per 100,000 in Each Region",
+       x = "Date",
+       y = "Cases per 100k") +
+  theme(axis.text.x = element_text(angle = 80, vjust = 0.7, hjust=0.7))
+#Time series not faceted
+covid_df %>%
+  mutate(cases_per_100k = new_cases/population*100000) %>%
+  filter(state_name != "NA") %>%
+  ggplot(aes(x = end_date, y = cases_per_100k))+
+  geom_line(show.legend = FALSE) +
+  labs(title = "Time Series of Covid Cases per 100,000 in Each Region",
+       x = "Date",
+       y = "Cases per 100k") +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") + 
+  theme(axis.text.x = element_text(angle = 80, vjust = 0.7, hjust=0.7))
+```
+
 
 
