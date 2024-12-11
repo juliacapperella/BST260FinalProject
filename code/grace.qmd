@@ -1,7 +1,6 @@
-
-
 LOAD DATA
-```{r}
+
+```{r warning = FALSE}
 #POPULATION DATA
 setwd(getwd())
 source("census-key.R")
@@ -14,8 +13,43 @@ response
 resp_content_type(response)
 population <- response |> resp_body_json(simplifyVector = TRUE) 
 
+library(janitor)
+library(stringr)
+population <- population %>%
+  row_to_names(row_number = 1) %>%
+  as_tibble() %>%   # convert to tibble
+  select(-state) %>%   # remove stat column
+  rename(state_name = NAME) %>% # rename state column to state_name
+  pivot_longer(cols = -state_name, 
+               names_to = "year",
+               values_to = "population") %>%   # use pivot_longer to tidy
+   mutate(year = str_remove(year, "POP_"), # remove POP_ from year
+          across(c(population), as.numeric),   # parese all relevant colunns to numeric
+          state_abb = case_when(
+            state_name == "District of Columbia" ~ "DC",
+            state_name == "Puerto Rico" ~ "PR",
+            state_name %in% state.name ~state.abb[match(state_name, state.name)],
+            TRUE ~ NA_character_
+          )) 
+
+library(purrr)
+url2 <- "https://github.com/datasciencelabs/2024/raw/refs/heads/main/data/regions.json"
+regions<- fromJSON(url2, simplifyDataFrame = FALSE) # regions <- use jsonlit JSON parser 
+regions <- map_df(regions, function(x) data.frame(region = x$region, 
+                                       region_name = x$region_name, 
+                                       state_name = x$states))
+regions <- regions %>%
+   mutate(region_name = ifelse(region_name == "New York and New Jersey, Puerto Rico, Virgin Islands", "NY&NJ, PR, VI", region_name))
+
+population <- population %>%
+  left_join(regions, by = "state_name")
+
+
 #COVID DATA
-api <- "https://data.cdc.gov/resource/pwn4-m3yp.json"
+library(jsonlite)
+library(tidyverse)
+library(lubridate)
+api <- "https://data.cdc.gov/resource/pwn4-m3yp.json?$limit=10000000000"
 
 covid_data <- request(api) %>%
   req_perform() %>%
@@ -37,5 +71,16 @@ covid_df <- covid_data %>%
     end_date = as.Date(end_date)
   ) %>%
   rename(state_abb = state)
+
+covid_df <- covid_df %>%
+  full_join(population, by = "state_abb")
 ```
+
+
+
+
+
+
+
+
 
