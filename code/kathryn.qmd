@@ -168,6 +168,24 @@ dat |>
        title = "Covid 19 Cases, Deaths and Hospitalizations per 100,000 People Over Time", 
        color = "Region") +
   facet_wrap(~type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
+
+dat |> 
+  mutate(case_rate = cases / population * 100000, # calculate the rate of cases per 100,000 people
+        hosp_rate = hosp / population * 100000, # calculate the rate of hospitalizations per 100,000 people
+        death_rate = deaths / population * 100000) |> # calculate the rate of deaths per 100,000 people
+  group_by(date) |>
+  summarize(case_rate = sum(population * case_rate, na.rm = TRUE) / sum(population, na.rm = TRUE), 
+            hosp_rate = sum(population * hosp_rate, na.rm = TRUE) / sum(population, na.rm = TRUE),
+            death_rate = sum(population * death_rate, na.rm = TRUE) / sum(population, na.rm = TRUE),
+            .groups = "drop") |>
+  pivot_longer(cols = c("case_rate", "hosp_rate", "death_rate"), 
+               names_to = "type", values_to = "rates") |> # change the format of the table for plotting
+  ggplot(aes(x=date, y=rates)) + # create the plot with date on the x and rates on the y, colored by region and grouped by state
+  geom_line() + # add lines
+  labs(x = "Date", y ="Weighted Averafe Rate per 100,000 People", 
+       title = "Covid 19 Cases, Deaths and Hospitalizations per 100,000 People Over Time", 
+       color = "Region") +
+  facet_wrap(~type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
 ```
 
 ```{r}
@@ -181,7 +199,8 @@ full_pop %>%
   coord_flip() + # flip coordinates
   facet_wrap(~ year) +   # facet by year
   theme_minimal() +
-  theme(axis.text.y = element_blank())  
+  theme(axis.text.y = element_blank()) 
+
 #Time series plot faceted by region
 covid_df %>%
   mutate(cases_per_100k = new_cases/population*100000) %>%
@@ -193,6 +212,7 @@ covid_df %>%
        x = "Date",
        y = "Cases per 100k") +
   theme(axis.text.x = element_text(angle = 80, vjust = 0.7, hjust=0.7))
+
 #Time series not faceted
 covid_df %>%
   mutate(cases_per_100k = new_cases/population*100000) %>%
