@@ -194,6 +194,7 @@ dat_waves |> filter(!is.na(wave)) |>
        color = "Wave") + 
   facet_wrap(~type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
 ```
+
 ```{r}
 # Death Rates by Wave
 
@@ -201,49 +202,54 @@ dat_waves |> filter(!is.na(wave)) |>
 wave_1_dr <- dat_waves |>
   filter(wave == 1, !is.na(deaths)) |>
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE) / mean(population, na.rm = TRUE) * 100000)
+
+wave_1_dr <- dat_waves |>
+  filter(wave == 1, !is.na(deaths)) |> 
+  group_by(state) |>
+  summarize(death_rate_per_100k = mean(deaths / population * 100000))
 
 # WAVE 2
 wave_2_dr <- dat_waves |>
-  filter(wave == 2, !is.na(deaths)) |>
+  filter(wave == 2, !is.na(deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+  summarize(death_rate_per_100k = mean(deaths / population * 100000))
 
 # WAVE 3
 wave_3_dr <- dat_waves |>
-  filter(wave == 3, !is.na(deaths)) |>
+  filter(wave == 3, !is.na(deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+  summarize(death_rate_per_100k = mean(deaths / population * 100000))
 
 # WAVE 4
 wave_4_dr <- dat_waves |>
-  filter(wave == 4, !is.na(deaths)) |>
+  filter(wave == 4, !is.na(deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+  summarize(death_rate_per_100k = mean(deaths / population * 100000))
 
 # WAVE 5
 wave_5_dr <- dat_waves |>
-  filter(wave == 5, !is.na(deaths)) |>
+  filter(wave == 5, !is.na(deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+  summarize(death_rate_per_100k = mean(deaths / population * 100000))
 
 # WAVE 6
 wave_6_dr <- dat_waves |>
-  filter(wave == 6, !is.na(deaths)) |>
+  filter(wave == 6, !is.na(deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+  summarize(death_rate_per_100k = mean(deaths / population * 100000))
 
 # WAVE 7
 wave_7_dr <- dat_waves |>
-  filter(wave == 7, !is.na(deaths)) |>
+  filter(wave == 7, !is.na(deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+  summarize(death_rate_per_100k = mean(deaths / population * 100000))
 
 # WAVE 8
 wave_8_dr <- dat_waves |>
-  filter(wave == 8, !is.na(deaths)) |>
+  filter(wave == 8, !is.na(deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+  summarize(death_rate_per_100k = mean(deaths / population * 100000))
 
 ```
 
@@ -254,7 +260,7 @@ wave_1_dr |>
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Covid-19 Death Rate by State for Wave 1",
        x = "State", 
-       y = "Weekly Death Rate per 100k") +
+       y = "Death Rate per 100k") +
   coord_flip()  # flip coordinates
 
 wave_2_dr |>
