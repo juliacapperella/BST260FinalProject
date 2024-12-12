@@ -4,23 +4,18 @@ format: html
 editor: visual
 ---
 
-## Quarto
+# BST 210: Final Project
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+*Julia Capperella, Grace Gaultier, Kathryn Saxton*
 
-## Running Code
+## Abstract
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## Introduction
 
-```{r}
-1 + 1
-```
+## Methods
 
-You can add options to executable code like this
+In order to adequately study the Covid-19 pandemic in the United States, multiple data sets are required.
 
-```{r}
-#| echo: false
-2 * 2
-```
+## Results
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Discussion

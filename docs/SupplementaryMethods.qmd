@@ -1,0 +1,13 @@
+---
+title: "Supplementary Methods"
+format: html
+editor: visual
+---
+
+# BST 210: Final Project
+
+*Julia Capperella, Grace Gaultier, Kathryn Saxton*
+
+## Supplementary Methods
+
+
