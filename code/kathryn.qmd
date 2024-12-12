@@ -79,7 +79,6 @@ get_cdc_data <- function(url,limit=1000000000) {
 cases_raw <- get_cdc_data("https://data.cdc.gov/resource/pwn4-m3yp.json") # cases data
 hosp_raw <- get_cdc_data("https://data.cdc.gov/resource/39z2-9zu6.json") # hospitalizations data
 deaths_raw <- get_cdc_data("https://data.cdc.gov/resource/r8kw-7aab.json") # deaths data
-vax_raw <- get_cdc_data("https://data.cdc.gov/resource/rh2h-3yt2.json") # vaccinations data
 
 ## Wrangle cases
 cases <- cases_raw |> 
@@ -103,11 +102,16 @@ hosp <- hosp_raw |>
   arrange(state, mmwr_year, mmwr_week) # reorder the columns
 
 ## Wrangle deaths
-deaths <- deaths_raw |> 
-  mutate(deaths = parse_number(covid_19_deaths)) |> # convert deaths to numeric
-  filter(state %in% population$state_name) |> # keep only jurisdictions included in the population data frame
-  mutate(mmwr_week = as.numeric(mmwr_week), mmwr_year = epiyear(ymd_hms(end_date))) |> # mutate/create columns for the corresponding epiweek and epiyear
-  select(state, mmwr_year, mmwr_week, deaths) |> # keep only state, epiyear, epiweek and deaths in the deaths data frame
+deaths <- deaths_raw %>%
+  mutate(covid_deaths = parse_number(covid_19_deaths),
+         total_deaths = parse_number(total_deaths),
+         percent_of_expected_deaths = as.numeric(percent_of_expected_deaths)) %>% # convert deaths to numeric
+  filter(state %in% population$state_name) %>% # keep only jurisdictions included in the population data frame
+  mutate(mmwr_week = as.numeric(mmwr_week),
+         mmwr_year = epiyear(ymd_hms(end_date))) %>%
+  # mutate/create columns for the corresponding epiweek and epiyear
+  select(state, mmwr_year, mmwr_week, covid_deaths, total_deaths, percent_of_expected_deaths) %>%
+  # keep only state, epiyear, epiweek and deaths in the deaths data frame
   arrange(state, mmwr_year, mmwr_week) # reorder the column
 
 # Join cases and population data
@@ -124,6 +128,12 @@ dat <- dates_and_pop |> left_join(cases, by = c("state", "mmwr_year", "mmwr_week
   left_join(hosp, by = c("state", "mmwr_year", "mmwr_week")) |> # add hospitalizations
   left_join(deaths, by = c("state_name" = "state", "mmwr_year", "mmwr_week")) |>
   arrange(state, date) # reorder the data frame
+
+
+dat <- dat %>%
+  mutate(expected_deaths = (percent_of_expected_deaths/100)*total_deaths,
+         excess_mort = total_deaths - expected_deaths)
+
 saveRDS(dat, "../data/covid_with_pop.rds") # save an RDS file in the data directory
 
 ```
@@ -133,7 +143,7 @@ saveRDS(dat, "../data/covid_with_pop.rds") # save an RDS file in the data direct
 dat |> 
   mutate(case_rate = cases / population * 100000, # calculate the rate of cases per 100,000 people
         hosp_rate = hosp / population * 100000, # calculate the rate of hospitalizations per 100,000 people
-        death_rate = deaths / population * 100000) |> # calculate the rate of deaths per 100,000 people
+        death_rate = covid_deaths / population * 100000) |> # calculate the rate of deaths per 100,000 people
   group_by(date) |>
   summarize(case_rate = mean(case_rate, na.rm = TRUE), 
             hosp_rate = mean(hosp_rate, na.rm = TRUE),
@@ -151,7 +161,7 @@ dat |>
 dat |> 
   mutate(case_rate = cases / population * 100000, # calculate the rate of cases per 100,000 people
         hosp_rate = hosp / population * 100000, # calculate the rate of hospitalizations per 100,000 people
-        death_rate = deaths / population * 100000) |> # calculate the rate of deaths per 100,000 people
+        death_rate = covid_deaths / population * 100000) |> # calculate the rate of deaths per 100,000 people
   group_by(date) |>
   summarize(case_rate = sum(population * case_rate, na.rm = TRUE) / sum(population, na.rm = TRUE), 
             hosp_rate = sum(population * hosp_rate, na.rm = TRUE) / sum(population, na.rm = TRUE),
@@ -169,22 +179,18 @@ dat |>
 ```{r}
 # Plots of Waves
 dat_waves <- dat |>
-  mutate(wave = case_when(between(date, make_date(2020, 3, 1), make_date(2020, 6, 30)) ~ 1,
-                          between(date, make_date(2020, 7, 1), make_date(2020, 8, 31)) ~ 2,
-                          between(date, make_date(2020, 9, 1), make_date(2021, 2, 28)) ~ 3,
-                          between(date, make_date(2021, 3, 1), make_date(2021, 6, 30)) ~ 4,
-                          between(date, make_date(2021, 7, 1), make_date(2021, 12, 31)) ~ 5,
-                          between(date, make_date(2022, 1, 1), make_date(2022, 3, 31)) ~ 6,
-                          between(date, make_date(2022, 4, 1), make_date(2022, 10, 31)) ~ 7,
-                          between(date, make_date(2022, 11, 1), make_date(2023, 7, 31)) ~ 8,
+  mutate(wave = case_when(between(date, make_date(2020, 3, 1), make_date(2020, 8, 31)) ~ 1,
+                          between(date, make_date(2020, 9, 1), make_date(2021, 5, 31)) ~ 2,
+                          between(date, make_date(2021, 6, 1), make_date(2021, 11, 30)) ~ 3,
+                          between(date, make_date(2021, 12, 1), make_date(2022, 3, 31)) ~ 4,
+                          between(date, make_date(2022, 4, 1), make_date(2023, 7, 31)) ~ 5,
                                   TRUE ~ NA)
-         
   )
 
 dat_waves |> filter(!is.na(wave)) |>
   mutate(case_rate = cases / population * 100000, # calculate the rate of cases per 100,000 people
          hosp_rate = hosp / population * 100000, # calculate the rate of hospitalizations per 100,000 people
-         death_rate = deaths / population * 100000) |> # calculate the rate of deaths per 100,000 people
+         death_rate = covid_deaths / population * 100000) |> # calculate the rate of deaths per 100,000 people
   pivot_longer(cols = c("case_rate", "hosp_rate", "death_rate"), 
                names_to = "type", values_to = "rates") |> # change the format of the table for plotting
   ggplot(aes(x=date, y=rates, color = factor(wave), group = state)) + # create the plot with date on the x and rates on the y, colored by region and grouped by state
@@ -200,57 +206,33 @@ dat_waves |> filter(!is.na(wave)) |>
 
 # WAVE 1
 wave_1_dr <- dat_waves |>
-  filter(wave == 1, !is.na(deaths)) |>
+  filter(wave == 1, !is.na(covid_deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = sum(deaths, na.rm = TRUE) / mean(population, na.rm = TRUE) * 100000)
-
-wave_1_dr <- dat_waves |>
-  filter(wave == 1, !is.na(deaths)) |> 
-  group_by(state) |>
-  summarize(death_rate_per_100k = mean(deaths / population * 100000))
+  summarize(death_rate_per_100k = mean(covid_deaths / population * 100000))
 
 # WAVE 2
 wave_2_dr <- dat_waves |>
-  filter(wave == 2, !is.na(deaths)) |> 
+  filter(wave == 2, !is.na(covid_deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = mean(deaths / population * 100000))
+  summarize(death_rate_per_100k = mean(covid_deaths / population * 100000))
 
 # WAVE 3
 wave_3_dr <- dat_waves |>
-  filter(wave == 3, !is.na(deaths)) |> 
+  filter(wave == 3, !is.na(covid_deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = mean(deaths / population * 100000))
+  summarize(death_rate_per_100k = mean(covid_deaths / population * 100000))
 
 # WAVE 4
 wave_4_dr <- dat_waves |>
-  filter(wave == 4, !is.na(deaths)) |> 
+  filter(wave == 4, !is.na(covid_deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = mean(deaths / population * 100000))
+  summarize(death_rate_per_100k = mean(covid_deaths / population * 100000))
 
 # WAVE 5
 wave_5_dr <- dat_waves |>
-  filter(wave == 5, !is.na(deaths)) |> 
+  filter(wave == 5, !is.na(covid_deaths)) |> 
   group_by(state) |>
-  summarize(death_rate_per_100k = mean(deaths / population * 100000))
-
-# WAVE 6
-wave_6_dr <- dat_waves |>
-  filter(wave == 6, !is.na(deaths)) |> 
-  group_by(state) |>
-  summarize(death_rate_per_100k = mean(deaths / population * 100000))
-
-# WAVE 7
-wave_7_dr <- dat_waves |>
-  filter(wave == 7, !is.na(deaths)) |> 
-  group_by(state) |>
-  summarize(death_rate_per_100k = mean(deaths / population * 100000))
-
-# WAVE 8
-wave_8_dr <- dat_waves |>
-  filter(wave == 8, !is.na(deaths)) |> 
-  group_by(state) |>
-  summarize(death_rate_per_100k = mean(deaths / population * 100000))
-
+  summarize(death_rate_per_100k = mean(covid_deaths / population * 100000))
 ```
 
 ```{r}
@@ -294,36 +276,29 @@ wave_5_dr |>
        x = "State", 
        y = "Average Weekly Death Rate per 100k") +
   coord_flip()  # flip coordinates
-
-wave_6_dr |>
-  ggplot(aes(x = reorder(state, death_rate_per_100k), y = death_rate_per_100k)) +  # reorder state, assign aesthetic mapping
-  geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Covid-19 Death Rate by State for Wave 6",
-       x = "State", 
-       y = "Weekly Death Rate per 100k") +
-  coord_flip()  # flip coordinates
-
-wave_7_dr |>
-  ggplot(aes(x = reorder(state, death_rate_per_100k), y = death_rate_per_100k)) +  # reorder state, assign aesthetic mapping
-  geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Covid-19 Death Rate by State for Wave 7",
-       x = "State", 
-       y = "Weekly Death Rate per 100k") +
-  coord_flip()  # flip coordinates
-
-wave_8_dr |>
-  ggplot(aes(x = reorder(state, death_rate_per_100k), y = death_rate_per_100k)) +  # reorder state, assign aesthetic mapping
-  geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Covid-19 Death Rate by State for Wave 8",
-       x = "State", 
-       y = "Weekly Death Rate per 100k") +
-  coord_flip()  # flip coordinates
 ```
 ```{r}
 # Top 5 / Bottom 5 per Wave
 
 # Wave 1
 wave_1_dr |> arrange(desc(death_rate_per_100k))
+wave_1_dr |> arrange(death_rate_per_100k)
+
+# Wave 2
+wave_2_dr |> arrange(desc(death_rate_per_100k))
+wave_2_dr |> arrange(death_rate_per_100k)
+
+# Wave 3
+wave_3_dr |> arrange(desc(death_rate_per_100k))
+wave_3_dr |> arrange(death_rate_per_100k)
+
+# Wave 4
+wave_4_dr |> arrange(desc(death_rate_per_100k))
+wave_4_dr |> arrange(death_rate_per_100k)
+
+# Wave 5
+wave_5_dr |> arrange(desc(death_rate_per_100k))
+wave_5_dr |> arrange(death_rate_per_100k)
 ```
 
 
