@@ -1,3 +1,4 @@
+LOAD DATA
 ```{r}
 library(httr2)
 library(janitor)
@@ -8,20 +9,23 @@ library(jsonlite)
 library(lubridate)
 ```
 
-```{r warning = FALSE}
+## DATA WRANGLING
 
+```{r warning = FALSE}
 #POPULATION DATA
 setwd(getwd())
 source("census-key.R")
 url <- "https://api.census.gov/data/2021/pep/population"
-
-request <- request(url)|> req_url_query(get = I("POP_2020,POP_2021,NAME"), `for` = I("state:*"), 
+request <- request(url)|> req_url_query(get = I("POP_2020,POP_2021,NAME"), 
+                                        `for` = I("state:*"), 
                                         key = census_key)
 print(request$url)
 response <- request |> req_perform()
+response
+resp_content_type(response)
 population <- response |> resp_body_json(simplifyVector = TRUE) 
 
-
+#wrangle df
 population <- population %>%
   row_to_names(row_number = 1) %>%
   as_tibble() %>%   # convert to tibble
@@ -59,12 +63,10 @@ full_pop <- population |>
   mutate(y2024 = y2023 * (1+growth_rate)) |>
   select(-growth_rate) |>
   pivot_longer(-c(state_name, state, region, region_name), names_to = "year", values_to = "population") |>
-  ungroup() |>
-  mutate(year = str_remove(year, "y")) |>
+  mutate(year = str_remove(year, "y")) %>%
   mutate(year = as.numeric(year))
- 
-saveRDS(full_pop, "../data/pop.rds") # save an RDS file in the data directory
-  
+
+
 #COVID DATA
 
 get_cdc_data <- function(url,limit=1000000000) {
@@ -77,51 +79,184 @@ get_cdc_data <- function(url,limit=1000000000) {
 }
 
 cases_raw <- get_cdc_data("https://data.cdc.gov/resource/pwn4-m3yp.json") # cases data
+deaths_raw <- get_cdc_data("https://data.cdc.gov/resource/r8kw-7aab.json") # deaths data
 
-## Wrangle cases
-cases <- cases_raw |> 
-  mutate(cases = parse_number(new_cases), date = as_date(ymd_hms(end_date))) |> # convert cases to numeric and date to date class
-  filter(state %in% population$state) |> # keep only jurisdictions included in the population data frame
-  mutate(mmwr_week = epiweek(date), mmwr_year = epiyear(date)) |> # add columns for the corresponding epiweek and epiyear
-  select(state, mmwr_year, mmwr_week, cases) |> # keep only state, epiyear, epiweek, and cases in the cases data frame
-  arrange(state, mmwr_year, mmwr_week) # reorder the columns
+# wrangle cases
+cases <- cases_raw %>% mutate(new_cases = parse_number(new_cases),
+                              date = as_date(ymd_hms(end_date)),
+                              tot_cases = as.numeric(tot_cases),
+                              tot_deaths = as.numeric(tot_deaths),
+                              new_deaths = as.numeric(new_deaths),
+                              new_historic_cases = as.numeric(new_historic_cases),
+                              new_historic_deaths = as.numeric(new_historic_deaths),
+                              date_updated = as.Date(date_updated),
+                              start_date = as.Date(start_date),
+                              end_date = as.Date(end_date),
+                              # year is based on end date!
+                              year = epiyear(end_date)) %>%
+  # keep only the states in population df
+  filter(state %in% full_pop$state)
 
-# Join cases and population data
-all_dates <- data.frame(date = seq(make_date(2020, 1, 25),
+# wrangle deaths
+deaths <- deaths_raw %>% filter(state %in% full_pop$state_name) %>%
+  mutate(percent_of_expected_deaths = as.numeric(percent_of_expected_deaths),
+         total_deaths = as.numeric(total_deaths),
+         covid_19_deaths = as.numeric(covid_19_deaths),
+         date = as_date(ymd_hms(end_date))) %>%
+  mutate(expected_deaths = (percent_of_expected_deaths/100)*total_deaths,
+         excess_mort = total_deaths - expected_deaths) %>%
+  mutate(start_date = as.Date(start_date),
+         end_date = as.Date(end_date)) %>%
+  mutate(state = state.abb[match(state, state.name)]) %>%
+  mutate(year = epiyear(end_date)) %>%
+  select(-data_as_of, -group, -week_ending_date, -footnote, -month, -mmwr_week)
+
+# combine cases and deaths to get full covid data
+covid_df <- cases %>%
+  full_join(deaths, by=c("date", "start_date","end_date","state","year"))
+
+# find all dates to combine full_pop and covid_df
+all_dates <- data.frame(date = seq(make_date(2020, 1, 1),
                                    make_date(2024, 12, 31), 
                                    by = "week")) |>
   mutate(date = ceiling_date(date, unit = "week", week_start = 7) - days(1)) |>
-  mutate(mmwr_year = epiyear(date), mmwr_week = epiweek(date)) 
+  mutate(year = epiyear(date))
 
-dates_and_pop <- cross_join(all_dates, data.frame(state = unique(full_pop$state))) |> 
-  left_join(full_pop, by = c("state", "mmwr_year" = "year"))
+# dates and pop
+dates_and_pop <- cross_join(all_dates, data.frame(state = unique(full_pop$state))) |> left_join(full_pop, by = c("state", "year"))
 
-dat <- dates_and_pop |> left_join(cases, by = c("state", "mmwr_year", "mmwr_week")) |> # join cases with the dates and population data frame
-  arrange(state, date) # reorder the data frame
-saveRDS(dat, "../data/cases_with_pop.rds") # save an RDS file in the data directory
-
+# combine for complete df
+covid_df <- dates_and_pop %>%
+  left_join(covid_df, by = c("date","state", "year"))
 ```
 
-Extra Covid Stuff
+
+## DATA VIZ
+
 ```{r}
-## Full Covid data
-covid_df <- cases_raw %>%
-  mutate(
-    tot_cases = as.numeric(tot_cases),
-    new_cases = as.numeric(new_cases),
-    tot_deaths = as.numeric(tot_deaths),
-    new_deaths = as.numeric(new_deaths),
-    new_historic_cases = as.numeric(new_historic_cases),
-    new_historic_deaths = as.numeric(new_historic_deaths),
-    date_updated = as.Date(date_updated),
-    start_date = as.Date(start_date),
-    end_date = as.Date(end_date)
-  ) 
-
-covid_df <- covid_df %>%
-  full_join(full_pop, by = "state")
-
-hosp_raw <- get_cdc_data("https://data.cdc.gov/resource/39z2-9zu6.json") # hospitalizations data
-deaths_raw <- get_cdc_data("https://data.cdc.gov/resource/r8kw-7aab.json") # deaths data
-vax_raw <- get_cdc_data("https://data.cdc.gov/resource/rh2h-3yt2.json") # vaccinations data
+#Population by state
+full_pop %>%
+  ggplot(aes(x = reorder(state, population), y = population, fill = state)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Population by State",
+       x = "State", 
+       y = "Population") +
+  coord_flip() + # flip coordinates
+  facet_wrap(~ year) +   # facet by year
+  theme_minimal() +
+  theme(axis.text.y = element_blank())  
 ```
+
+```{r}
+#Time series plot faceted by region
+covid_df %>%
+  mutate(cases_per_100k = new_cases/population*100000) %>%
+  filter(state_name != "NA") %>%
+  ggplot(aes(x = end_date, y = cases_per_100k, color = state_name))+
+  geom_line(show.legend = FALSE) +
+  facet_wrap(~region_name) +
+  labs(title = "Time Series of Covid Cases per 100,000 in Each Region",
+       x = "Date",
+       y = "Cases per 100k") +
+  theme(axis.text.x = element_text(angle = 80, vjust = 0.7, hjust=0.7))
+  
+```
+
+```{r}
+#Time series not faceted
+covid_df %>%
+  mutate(cases_per_100k = new_cases/population*100000) %>%
+  filter(state_name != "NA") %>%
+  ggplot(aes(x = end_date, y = cases_per_100k))+
+  geom_line(show.legend = FALSE) +
+  labs(title = "Time Series of Covid Cases per 100,000 in Each Region",
+       x = "Date",
+       y = "Cases per 100k") +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") + 
+  theme(axis.text.x = element_text(angle = 80, vjust = 0.7, hjust=0.7))
+  
+```
+
+
+# Wave 1: March 2020 - June 2020
+```{r}
+#Death rate March 2020 to June 2020 by state
+covid_df %>%
+  filter(year(start_date) %in% c(2020)) %>%
+  filter(month(start_date) %in% c(3, 4, 5, 6)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+         
+```
+
+# Wave 2: July 2020 - Aug 2020
+```{r}
+#Death rate by state for July 2020 - Aug 2020
+covid_df %>%
+  filter(year(start_date) %in% c(2020)) %>%
+  filter(month(start_date) %in% c(7, 8)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+# Wave 3: September 2020 - Feb 2021
+```{r}
+#Death rate by state for September 2020 - Feb 2021
+covid_df %>%
+  filter(year(start_date) == 2020 & month(start_date) >= 9 |
+           year(start_date) == 2021 & month(start_date) <= 2) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+# Wave 4: March 2021 - June 2021
+```{r}
+#Death rate per 100k March 2021 - June 2021
+covid_df %>%
+  filter(year(start_date) %in% c(2021)) %>%
+  filter(month(start_date) %in% c(3, 4, 5, 6)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+# Wave 5: July 2021 - Dec 2021
+```{r}
+#Death rate per 100k July 2021 to Dec 2021
+covid_df %>%
+  filter(year(start_date) %in% c(2021)) %>%
+  filter(month(start_date) %in% c(7:12)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+# Wave 6: Jan 2022 - March 2022
+```{r}
+#Death rate per 100k jan 2022 - march 2022
+covid_df %>%
+  filter(year(start_date) %in% c(2022)) %>%
+  filter(month(start_date) %in% c(1:3)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+# Wave 7: Apr 2022 - Oct 2022
+```{r}
+#death rate per 100k apr 2022 to oct 2022
+covid_df %>%
+  filter(year(start_date) %in% c(2022)) %>%
+  filter(month(start_date) %in% c(4:10)) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+# Wave 8: Nov 2022 - July 2023
+```{r}
+#Death rate per 100k nov 2022 to july 2023
+covid_df %>%
+  filter(year(start_date) == 2022 & month(start_date) >= 11 |
+           year(start_date) == 2023 & month(start_date) <= 7) %>%
+  group_by(state_name) %>%
+  summarize(death_rate_per_100k = sum(tot_deaths, na.rm = TRUE)/sum(population, na.rm = TRUE)*100000)
+```
+
+Over time and through each period, COVID because more virulent. The cases increased significantly throughout each wave, even taking into the fact that each wave are different lengths of time.
