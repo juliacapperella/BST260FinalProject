@@ -180,4 +180,24 @@ dat_waves |> filter(!is.na(wave)) |>
        color = "Wave") + 
   facet_wrap(~type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
 ```
+Top 5 Performers
+
+|  | Wave 1 |  Wave 2 | Wave 3 | Wave 4 | Wave 5 |
+|--|--------|--------|--------|--------|--------|
+| #1 | Alaska (0.00) | Vermont (0.70) | New York (0.70) | Hawaii (1.90) | Alaska (0.00) |
+| #2 | Wyoming (0.00) | Washington (1.24) | Massachusetts (0.78) | New York (2.04) | Wyoming (0.27) |
+| #3 | Hawaii (0.31) | Oregon (1.33) | New Jersey (0.88) | Utah (2.07) | Texas (0.43) |
+| #4 | Vermont (0.33) | Hawaii (1.35) | Connecticut (0.93) | Washington (2.08) | New York (0.46))|
+| #5 | Oregon (0.50)| Puerto Rico (1.58) | Vermont (0.95) | Puerto Rico (2.16) | Utah (0.47) |
+
+Bottom 5 Performers
+
+|  | Wave 1 |  Wave 2 | Wave 3 | Wave 4 | Wave 5 |
+|--|--------|--------|--------|--------|--------|
+| #1 | New Jersey (6.20) | North Dakota (6.87) | Wyoming (5.78) | West Virginia (6.10) | West Virginia (1.35) |
+| #2 | Connecticut (5.66) | South Dakota (6.81) | Montana (5.12) | Ohio (6.00) | Vermont (1.27) |
+| #3 | Washington D.C. (5.33) | Wyoming (4.93) | West Virginia (5.06) | New Mexico (5.69) | Delaware (1.20)|
+| #4 | Rhode Island (4.86) | Oklahoma (4.91) | Alaska (4.65) | Kentucky (5.52) | Kentucky (1.17)|
+| #5 | Massachusetts (4.78)| Rhode Island (4.53) | Florida (4.44) | Oklahoma (5.41) | Maine (1.05) |
+
 ## Discussion
