@@ -135,7 +135,6 @@ dat <- dat %>%
          excess_mort = total_deaths - expected_deaths)
 
 saveRDS(dat, "../data/covid_with_pop.rds") # save an RDS file in the data directory
-
 ```
 
 ```{r}
