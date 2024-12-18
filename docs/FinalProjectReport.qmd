@@ -20,17 +20,17 @@ library(lubridate)
 ```{r include = FALSE, warning = FALSE}
 
 #POPULATION DATA
+
 setwd("../code")
 source("census-key.R")
 url <- "https://api.census.gov/data/2021/pep/population"
 
-request <- request(url)|> req_url_query(get = I("POP_2020,POP_2021,NAME"), `for` = I("state:*"), 
+request <- request(url)|> req_url_query(get = I("POP_2020,POP_2021,NAME"), `for` = I("state:*"),
                                         key = census_key)
-print(request$url)
 response <- request |> req_perform()
 population <- response |> resp_body_json(simplifyVector = TRUE) 
 
-
+# wrangle population data
 population <- population %>%
   row_to_names(row_number = 1) %>%
   as_tibble() %>%   # convert to tibble
@@ -46,18 +46,23 @@ population <- population %>%
                            state_name == "District of Columbia" ~ "DC", 
                            TRUE ~ state)) # use case_when to add abbreviations for DC and PR
 
+# REGION DATA
+
 
 url2 <- "https://github.com/datasciencelabs/2024/raw/refs/heads/main/data/regions.json"
 regions<- fromJSON(url2, simplifyDataFrame = FALSE) # regions <- use jsonlit JSON parser 
 regions <- map_df(regions, function(x) data.frame(region = x$region, 
                                        region_name = x$region_name, 
                                        state_name = x$states))
+# wrangle region data
 regions <- regions %>%
    mutate(region_name = ifelse(region_name == "New York and New Jersey, Puerto Rico, Virgin Islands", "NY&NJ, PR, VI", region_name))
 
+# join with population data
 population <- population %>%
   left_join(regions, by = "state_name")
 
+# extrapolate population data for 2022, 2023, and 2024
 full_pop <- population |> 
   group_by(state_name, year) |> 
   pivot_wider(names_from = year, values_from = population) |>
@@ -71,8 +76,6 @@ full_pop <- population |>
   ungroup() |>
   mutate(year = str_remove(year, "y")) |>
   mutate(year = as.numeric(year))
- 
-saveRDS(full_pop, "../data/pop.rds") # save an RDS file in the data directory
   
 #COVID DATA
 
@@ -138,12 +141,10 @@ dat <- dates_and_pop |> left_join(cases, by = c("state", "mmwr_year", "mmwr_week
   left_join(deaths, by = c("state_name" = "state", "mmwr_year", "mmwr_week")) |>
   arrange(state, date) # reorder the data frame
 
-
+# EXCESS MORTALITY
 dat <- dat %>%
   mutate(expected_deaths = (percent_of_expected_deaths/100)*total_deaths,
          excess_mort = total_deaths - expected_deaths)
-
-saveRDS(dat, "../data/covid_with_pop.rds") # save an RDS file in the data directory
 
 ```
 ## Abstract
