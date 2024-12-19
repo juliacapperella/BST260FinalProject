@@ -12,17 +12,25 @@ editor: visual
 
 ### Equations
 
-Equation 1: Population Calculation $$
+Equation 1: Population Calculation
+$$
 \mbox{growth rate} = \frac{population_{2021} - population_{2020}}{population_{2020}}
-$$ $$
-\mbox{population prediction} = population_{2021}*(1+ \mbox{growth_rate})^{(\mbox{years since 2021)}}
+$$ 
+$$
+\mbox{population prediction} = population_{2021} \times (1+ \mbox{growth rate}) ^ \mbox{years since 2021}
 $$
 
-Equation 2: Rate Calculation $$
+Equation 2: Rate Calculation 
+$$
 \mbox{rate per 100,000 people} = 100000 * \frac{\mbox{count}}{\mbox{population}}
-$$ Equation 3: Excess Mortality Calculations $$
+$$ 
+
+Equation 3: Excess Mortality Calculations 
+Excess deaths are an interesting measurement to analyze. Excess mortality is the difference between the total number of deaths occuring and the expected number of deaths, calculated based on historical seasonal trends. A positive value indicates that COVID-19 may have been responsible for increased the number of deaths, rather than seasonal fluctuations alone.
+$$
 \mbox{expected deaths} = \frac{\mbox{total deaths}}{\frac{\mbox{percent of expected deaths}}{100}} 
-$$ $$
+$$ 
+$$
 \mbox{excess mortality} = \mbox{total deaths - expected deaths}
 $$
 
@@ -586,95 +594,89 @@ SI Figures 22-26: Virulence -- Deaths Per Cases Per State For Each Wave
 ```{r echo = FALSE}
 # Virulence Rates by State
 # WAVE 1
-dat_waves |> filter(wave == 1, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 1, !is.na(covid_deaths), !is.na(cases)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         case_rate = cases / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dpc = mean(deaths_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dpc), y = dpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Deaths Per Cases Per State for Wave 1",
        x = "State", 
-       y = "Deaths Rate / Case Rate") +
+       y = "Death Rate / Case Rate") +
   coord_flip()  # flip coordinates
 
 # WAVE 2
-dat_waves |> filter(wave == 2, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 2, !is.na(covid_deaths), !is.na(cases)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         case_rate = cases / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dpc = mean(deaths_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dpc), y = dpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Deaths Per Cases Per State for Wave 2",
        x = "State", 
-       y = "Deaths Rate / Case Rate") +
+       y = "Death Rate / Case Rate") +
   coord_flip()  # flip coordinates
 
 # WAVE 3
-dat_waves |> filter(wave == 3, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 3, !is.na(covid_deaths), !is.na(cases)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         case_rate = cases / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dpc = mean(deaths_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dpc), y = dpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Deaths Per Cases Per State for Wave 3",
        x = "State", 
-       y = "Deaths Rate / Case Rate") +
+       y = "Death Rate / Case Rate") +
   coord_flip()  # flip coordinates
 
 # WAVE 4
-dat_waves |> filter(wave == 4, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 4, !is.na(covid_deaths), !is.na(cases)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         case_rate = cases / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dpc = mean(deaths_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dpc), y = dpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Deaths Per Cases Per State for Wave 4",
        x = "State", 
-       y = "Deaths Rate / Case Rate") +
+       y = "Death Rate / Case Rate") +
   coord_flip()  # flip coordinates
 
 # WAVE 5
-dat_waves |> filter(wave == 5, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 5, !is.na(covid_deaths), !is.na(cases)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         case_rate = cases / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dpc = mean(deaths_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dpc), y = dpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Deaths Per Cases Per State for Wave 5",
        x = "State", 
-       y = "Deaths Rate / Case Rate") +
+       y = "Death Rate / Case Rate") +
   coord_flip()  # flip coordinates
 
 ```
 
 SI Figures 27-31: Virulence -- Hospitalizations Per Cases Per State For Each Wave
 
-```{r echo = FALSE}
+```{r warning = FALSE, echo = FALSE}
 # Virulence Rates by State
 # WAVE 1
-dat_waves |> filter(wave == 1, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+dat_waves |> filter(wave == 1,!is.na(cases), !is.na(hosp)) %>%
   mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
   mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  group_by(state) |>
+  summarize(hpc = mean(hospitalizations_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, hpc), y = hpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Hosps Per Cases Per State for Wave 1",
        x = "State", 
@@ -682,14 +684,13 @@ dat_waves |> filter(wave == 1, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)
   coord_flip()  # flip coordinates
 
 # WAVE 2
-dat_waves |> filter(wave == 2, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+dat_waves |> filter(wave == 2,!is.na(cases), !is.na(hosp)) %>%
   mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
   mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  group_by(state) |>
+  summarize(hpc = mean(hospitalizations_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, hpc), y = hpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Hosps Per Cases Per State for Wave 2",
        x = "State", 
@@ -697,14 +698,13 @@ dat_waves |> filter(wave == 2, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)
   coord_flip()  # flip coordinates
 
 # WAVE 3
-dat_waves |> filter(wave == 3, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+dat_waves |> filter(wave == 3,!is.na(cases), !is.na(hosp)) %>%
   mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
   mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  group_by(state) |>
+  summarize(hpc = mean(hospitalizations_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, hpc), y = hpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Hosps Per Cases Per State for Wave 3",
        x = "State", 
@@ -712,14 +712,13 @@ dat_waves |> filter(wave == 3, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)
   coord_flip()  # flip coordinates
 
 # WAVE 4
-dat_waves |> filter(wave == 4, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+dat_waves |> filter(wave == 4,!is.na(cases), !is.na(hosp)) %>%
   mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
   mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  group_by(state) |>
+  summarize(hpc = mean(hospitalizations_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, hpc), y = hpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Hosps Per Cases Per State for Wave 4",
        x = "State", 
@@ -727,35 +726,32 @@ dat_waves |> filter(wave == 4, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)
   coord_flip()  # flip coordinates
 
 # WAVE 5
-dat_waves |> filter(wave == 5, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+dat_waves |> filter(wave == 5,!is.na(cases), !is.na(hosp)) %>%
   mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
   mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  group_by(state) |>
+  summarize(hpc = mean(hospitalizations_per_cases, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, hpc), y = hpc)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Hosps Per Cases Per State for Wave 5",
        x = "State", 
        y = "Hosp Rate / Case Rate") +
   coord_flip()  # flip coordinates
-
 ```
 
 SI Figures 32-36: Virulence -- Deaths Per Hospitalizations Per State For Each Wave
 
-```{r echo = FALSE}
+```{r warning = FALSE, echo = FALSE}
 # Virulence Rates by State
 # WAVE 1
-dat_waves |> filter(wave == 1, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, deaths_per_hospitalizations), y = deaths_per_hospitalizations)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 1, !is.na(covid_deaths), !is.na(hosp)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_hosps = death_rate / hosp_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dph = mean(deaths_per_hosps, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dph), y = dph)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Deaths Per Hosps Per State for Wave 1",
        x = "State", 
@@ -763,14 +759,13 @@ dat_waves |> filter(wave == 1, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)
   coord_flip()  # flip coordinates
 
 # WAVE 2
-dat_waves |> filter(wave == 2, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, deaths_per_hospitalizations), y = deaths_per_hospitalizations)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 2, !is.na(covid_deaths), !is.na(hosp)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_hosps = death_rate / hosp_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dph = mean(deaths_per_hosps, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dph), y = dph)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Deaths Per Hosps Per State for Wave 2",
        x = "State", 
@@ -778,14 +773,13 @@ dat_waves |> filter(wave == 2, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)
   coord_flip()  # flip coordinates
 
 # WAVE 3
-dat_waves |> filter(wave == 3, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, deaths_per_hospitalizations), y = deaths_per_hospitalizations)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 3, !is.na(covid_deaths), !is.na(hosp)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_hosps = death_rate / hosp_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dph = mean(deaths_per_hosps, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dph), y = dph)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
   labs(title = "Deaths Per Hosps Per State for Wave 3",
        x = "State", 
@@ -793,33 +787,30 @@ dat_waves |> filter(wave == 3, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)
   coord_flip()  # flip coordinates
 
 # WAVE 4
-dat_waves |> filter(wave == 4, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 4, !is.na(covid_deaths), !is.na(hosp)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_hosps = death_rate / hosp_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dph = mean(deaths_per_hosps, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dph), y = dph)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Hosps Per Cases Per State for Wave 4",
+  labs(title = "Deaths Per Hosps Per State for Wave 4",
        x = "State", 
-       y = "Hosp Rate / Case Rate") +
+       y = "Death Rate / Hosp Rate") +
   coord_flip()  # flip coordinates
 
 # WAVE 5
-dat_waves |> filter(wave == 5, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
-  mutate(case_rate = cases / population * 100000, # calculate case rate
-         hosp_rate = hosp / population * 100000, # calculate hosp rate
-         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
-  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
-  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
-  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
-  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+dat_waves |> filter(wave == 5, !is.na(covid_deaths), !is.na(hosp)) %>%
+  mutate(death_rate = covid_deaths / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000) %>% # calculate hosp rate
+  mutate(deaths_per_hosps = death_rate / hosp_rate) %>% # calculate hosp/cases
+  group_by(state) |>
+  summarize(dph = mean(deaths_per_hosps, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(state, dph), y = dph)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Hosps Per Cases Per State for Wave 5",
+  labs(title = "Deaths Per Hosps Per State for Wave 5",
        x = "State", 
-       y = "Hosp Rate / Case Rate") +
+       y = "Death Rate / Hosp Rate") +
   coord_flip()  # flip coordinates
-
 ```
