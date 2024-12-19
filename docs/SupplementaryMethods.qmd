@@ -12,23 +12,17 @@ editor: visual
 
 ### Equations
 
-Equation 1: Population Calculation
-$$
+Equation 1: Population Calculation $$
 \mbox{growth rate} = \frac{population_{2021} - population_{2020}}{population_{2020}}
-$$
-$$
+$$ $$
 \mbox{population prediction} = population_{2021}*(1+ \mbox{growth_rate})^{(\mbox{years since 2021)}}
 $$
 
-Equation 2: Rate Calculation
-$$
+Equation 2: Rate Calculation $$
 \mbox{rate per 100,000 people} = 100000 * \frac{\mbox{count}}{\mbox{population}}
-$$
-Equation 3: Excess Mortality Calculations
-$$
+$$ Equation 3: Excess Mortality Calculations $$
 \mbox{expected deaths} = \frac{\mbox{total deaths}}{\frac{\mbox{percent of expected deaths}}{100}} 
-$$
-$$
+$$ $$
 \mbox{excess mortality} = \mbox{total deaths - expected deaths}
 $$
 
@@ -218,7 +212,6 @@ wave_5_dr <- dat_waves |>
   summarize(death_rate_per_100k = mean(covid_deaths / population * 100000))
 ```
 
-
 SI Figure 1: Average Covid 19 Cases, Deaths and Hospitalizations per 100,000 People Over Time
 
 ```{r echo = FALSE}
@@ -242,6 +235,7 @@ dat |>
 ```
 
 SI Figures 2-6: Covid 19 Death Rates by State for each Wave
+
 ```{r echo = FALSE}
 # Death Rate Plots by Wave
 wave_1_dr |>
@@ -287,35 +281,36 @@ wave_5_dr |>
 
 SI Table 1: State Performance By Death Rate per 100k People
 
-| State | Top 5 Frequency | Bottom 5 Frequency |
-|------|-----|-----|
-|Hawaii| 3 | 0 |
-|Washington| 3 | 0 |
-|New York| 3 | 0 |
-|Vermont| 3 | 1 |
-|Oregon| 2 | 0 |
-|Puerto Rico| 2 | 0 |
-|Alaska| 2 | 0 |
-|Utah| 2 | 0|
-|Wyoming| 2 | 2 |
-|Texas| 1 | 0 |
-|Massachusetts| 1 | 1 |
-|New Jersey| 1 | 1 |
-|Connecticut| 1 | 1 |
-|Washington D.C.| 0 | 1 |
-|North Dakota| 0 | 1 |
-|South Dakota| 0 | 1 |
-|Ohio| 0 | 1 |
-|New Mexico| 0 | 1 |
-|Montana| 0 | 1 |
-|Delaware| 0 | 1 |
-|Maine| 0 | 1 |
-|Rhode Island| 0 | 2 |
-|Oklahoma| 0 | 2 |
-|West Virginia| 0 | 2 |
-|Kentucky| 0 | 2 |
+| State           | Top 5 Frequency | Bottom 5 Frequency |
+|-----------------|-----------------|--------------------|
+| Hawaii          | 3               | 0                  |
+| Washington      | 3               | 0                  |
+| New York        | 3               | 0                  |
+| Vermont         | 3               | 1                  |
+| Oregon          | 2               | 0                  |
+| Puerto Rico     | 2               | 0                  |
+| Alaska          | 2               | 0                  |
+| Utah            | 2               | 0                  |
+| Wyoming         | 2               | 2                  |
+| Texas           | 1               | 0                  |
+| Massachusetts   | 1               | 1                  |
+| New Jersey      | 1               | 1                  |
+| Connecticut     | 1               | 1                  |
+| Washington D.C. | 0               | 1                  |
+| North Dakota    | 0               | 1                  |
+| South Dakota    | 0               | 1                  |
+| Ohio            | 0               | 1                  |
+| New Mexico      | 0               | 1                  |
+| Montana         | 0               | 1                  |
+| Delaware        | 0               | 1                  |
+| Maine           | 0               | 1                  |
+| Rhode Island    | 0               | 2                  |
+| Oklahoma        | 0               | 2                  |
+| West Virginia   | 0               | 2                  |
+| Kentucky        | 0               | 2                  |
 
 SI Figures 7-11: Excess Mortality Rates by State for each Wave
+
 ```{r echo = FALSE}
 # differences by state
 wave_1_em_diff <- dat_waves |>
@@ -390,6 +385,7 @@ wave_5_em_diff |>
 ```
 
 SI Figures 12-16: Excess Mortality Rates by State for each Wave
+
 ```{r echo = FALSE}
 # Excess Mortality Rates by Wave
 # WAVE 1
@@ -464,8 +460,366 @@ wave_5_em |>
   coord_flip()  # flip coordinates
 ```
 
+SI Figures 17-21: Virulence Rates Over Time For Each Wave
 
+```{r echo = FALSE}
+# Virulence Rates by Wave
+# WAVE 1
+# plot of virulence over time
+dat_waves |> filter(wave == 1,!is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>% # calculate deaths/hosp
+  pivot_longer(cols = c(deaths_per_cases,
+                        deaths_per_hospitalizations,
+                        hospitalizations_per_cases),
+               names_to = "rate_type",
+               values_to = "rate") %>%
+  # create the plot with date on x and rates on y, colored by wave and grouped by state
+  ggplot(aes(x=date, y=rate, color = factor(wave), group = state)) +
+  geom_line() + # add lines
+  labs(x = "Date",
+       y ="Rate per 100,000 People", 
+       title = "Covid 19 Virulence Measures Over Wave 1", 
+       color = "Wave") + 
+  facet_wrap(~rate_type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
 
+# WAVE 2
+# plot of virulence over time
+dat_waves |> filter(wave == 2,!is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>% # calculate deaths/hosp
+  pivot_longer(cols = c(deaths_per_cases,
+                        deaths_per_hospitalizations,
+                        hospitalizations_per_cases),
+               names_to = "rate_type",
+               values_to = "rate") %>%
+  # create the plot with date on x and rates on y, colored by wave and grouped by state
+  ggplot(aes(x=date, y=rate, color = factor(wave), group = state)) +
+  geom_line() + # add lines
+  labs(x = "Date",
+       y ="Rate per 100,000 People", 
+       title = "Covid 19 Virulence Measures Over Wave 2", 
+       color = "Wave") + 
+  facet_wrap(~rate_type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
 
+# WAVE 3
+# plot of virulence over time
+dat_waves |> filter(wave == 3,!is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>% # calculate deaths/hosp
+  pivot_longer(cols = c(deaths_per_cases,
+                        deaths_per_hospitalizations,
+                        hospitalizations_per_cases),
+               names_to = "rate_type",
+               values_to = "rate") %>%
+  # create the plot with date on x and rates on y, colored by wave and grouped by state
+  ggplot(aes(x=date, y=rate, color = factor(wave), group = state)) +
+  geom_line() + # add lines
+  labs(x = "Date",
+       y ="Rate per 100,000 People", 
+       title = "Covid 19 Virulence Measures Over Wave 3", 
+       color = "Wave") + 
+  facet_wrap(~rate_type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
 
+# WAVE 4
+# plot of virulence over time
+dat_waves |> filter(wave == 4,!is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>% # calculate deaths/hosp
+  pivot_longer(cols = c(deaths_per_cases,
+                        deaths_per_hospitalizations,
+                        hospitalizations_per_cases),
+               names_to = "rate_type",
+               values_to = "rate") %>%
+  # create the plot with date on x and rates on y, colored by wave and grouped by state
+  ggplot(aes(x=date, y=rate, color = factor(wave), group = state)) +
+  geom_line() + # add lines
+  labs(x = "Date",
+       y ="Rate per 100,000 People", 
+       title = "Covid 19 Virulence Measures Over Wave 4", 
+       color = "Wave") + 
+  facet_wrap(~rate_type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
 
+# WAVE 5
+# plot of virulence over time
+dat_waves |> filter(wave == 5,!is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>% # calculate deaths/hosp
+  pivot_longer(cols = c(deaths_per_cases,
+                        deaths_per_hospitalizations,
+                        hospitalizations_per_cases),
+               names_to = "rate_type",
+               values_to = "rate") %>%
+  # create the plot with date on x and rates on y, colored by wave and grouped by state
+  ggplot(aes(x=date, y=rate, color = factor(wave), group = state)) +
+  geom_line() + # add lines
+  labs(x = "Date",
+       y ="Rate per 100,000 People", 
+       title = "Covid 19 Virulence Measures Over Wave 5", 
+       color = "Wave") + 
+  facet_wrap(~rate_type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
+
+```
+
+SI Figures 22-26: Virulence -- Deaths Per Cases Per State For Each Wave
+
+```{r echo = FALSE}
+# Virulence Rates by State
+# WAVE 1
+dat_waves |> filter(wave == 1, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Deaths Per Cases Per State for Wave 1",
+       x = "State", 
+       y = "Deaths Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 2
+dat_waves |> filter(wave == 2, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Deaths Per Cases Per State for Wave 2",
+       x = "State", 
+       y = "Deaths Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 3
+dat_waves |> filter(wave == 3, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Deaths Per Cases Per State for Wave 3",
+       x = "State", 
+       y = "Deaths Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 4
+dat_waves |> filter(wave == 4, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Deaths Per Cases Per State for Wave 4",
+       x = "State", 
+       y = "Deaths Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 5
+dat_waves |> filter(wave == 5, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, deaths_per_cases), y = deaths_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Deaths Per Cases Per State for Wave 5",
+       x = "State", 
+       y = "Deaths Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+```
+
+SI Figures 27-31: Virulence -- Hospitalizations Per Cases Per State For Each Wave
+
+```{r echo = FALSE}
+# Virulence Rates by State
+# WAVE 1
+dat_waves |> filter(wave == 1, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Hosps Per Cases Per State for Wave 1",
+       x = "State", 
+       y = "Hosp Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 2
+dat_waves |> filter(wave == 2, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Hosps Per Cases Per State for Wave 2",
+       x = "State", 
+       y = "Hosp Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 3
+dat_waves |> filter(wave == 3, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Hosps Per Cases Per State for Wave 3",
+       x = "State", 
+       y = "Hosp Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 4
+dat_waves |> filter(wave == 4, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Hosps Per Cases Per State for Wave 4",
+       x = "State", 
+       y = "Hosp Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 5
+dat_waves |> filter(wave == 5, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Hosps Per Cases Per State for Wave 5",
+       x = "State", 
+       y = "Hosp Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+```
+
+SI Figures 32-36: Virulence -- Deaths Per Hospitalizations Per State For Each Wave
+
+```{r echo = FALSE}
+# Virulence Rates by State
+# WAVE 1
+dat_waves |> filter(wave == 1, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, deaths_per_hospitalizations), y = deaths_per_hospitalizations)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Deaths Per Hosps Per State for Wave 1",
+       x = "State", 
+       y = "Death Rate / Hosp Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 2
+dat_waves |> filter(wave == 2, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, deaths_per_hospitalizations), y = deaths_per_hospitalizations)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Deaths Per Hosps Per State for Wave 2",
+       x = "State", 
+       y = "Death Rate / Hosp Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 3
+dat_waves |> filter(wave == 3, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, deaths_per_hospitalizations), y = deaths_per_hospitalizations)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Deaths Per Hosps Per State for Wave 3",
+       x = "State", 
+       y = "Death Rate / Hosp Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 4
+dat_waves |> filter(wave == 4, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Hosps Per Cases Per State for Wave 4",
+       x = "State", 
+       y = "Hosp Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+# WAVE 5
+dat_waves |> filter(wave == 5, !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
+  mutate(case_rate = cases / population * 100000, # calculate case rate
+         hosp_rate = hosp / population * 100000, # calculate hosp rate
+         death_rate = covid_deaths / population * 100000) %>% # calculate death rate
+  mutate(deaths_per_cases = death_rate / case_rate) %>% # calculate deaths/cases
+  mutate(hospitalizations_per_cases = hosp_rate / case_rate) %>% # calculate hosp/cases
+  mutate(deaths_per_hospitalizations = death_rate / hosp_rate) %>%
+  ggplot(aes(x = reorder(state, hospitalizations_per_cases), y = hospitalizations_per_cases)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Hosps Per Cases Per State for Wave 5",
+       x = "State", 
+       y = "Hosp Rate / Case Rate") +
+  coord_flip()  # flip coordinates
+
+```
