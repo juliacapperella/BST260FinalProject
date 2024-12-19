@@ -143,7 +143,7 @@ dat <- dates_and_pop |> left_join(cases, by = c("state", "mmwr_year", "mmwr_week
 
 # EXCESS MORTALITY
 dat <- dat %>%
-  mutate(expected_deaths = (percent_of_expected_deaths/100)*total_deaths,
+  mutate(expected_deaths = total_deaths / (percent_of_expected_deaths/100),
          excess_mort = total_deaths - expected_deaths)
 
 ```
@@ -181,6 +181,8 @@ dat_waves |> filter(!is.na(wave)) |>
        color = "Wave") + 
   facet_wrap(~type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
 ```
+Figure 1: COVID-19 Pandemic Divided into 5 Waves.
+
 Top 5 Performers
 
 |  | Wave 1 |  Wave 2 | Wave 3 | Wave 4 | Wave 5 |
@@ -200,5 +202,32 @@ Bottom 5 Performers
 | #3 | Washington D.C. (5.33) | Wyoming (4.93) | West Virginia (5.06) | New Mexico (5.69) | Delaware (1.20)|
 | #4 | Rhode Island (4.86) | Oklahoma (4.91) | Alaska (4.65) | Kentucky (5.52) | Kentucky (1.17)|
 | #5 | Massachusetts (4.78)| Rhode Island (4.53) | Florida (4.44) | Oklahoma (5.41) | Maine (1.05) |
+
+Table 1: Weekly Death Rates by Wave. Average weekly COVID-19 death rates per 100,000 people are given in parentheses.
+
+```{r echo = FALSE}
+# plot of excess mortality over time for each state
+dat_waves |> filter(!is.na(wave)) |>
+  mutate(ex_mort_per_100k = excess_mort / population * 100000) |>
+ggplot(aes(x=date, y=ex_mort_per_100k, color = factor(wave), group = state)) + # create the plot with date on the x and rates on the y, colored by region and grouped by state
+  geom_line() + # add lines
+  labs(x = "Date", y ="Excess Mortality Rate per 100,000 People", 
+       title = "Excess Mortality per 100,000 People Over Time", 
+       color = "Wave")
+```
+Figure 2: Excess Deaths per 100,000 people over time. 
+
+```{r echo = FALSE}
+# centered around 0 --> covid prob explains it
+dat_waves |> filter(!is.na(wave)) |>
+    mutate(death_diff = covid_deaths - excess_mort) |>
+  mutate(diff_per_100k = death_diff / population * 100000) |>
+ggplot(aes(x=date, y=diff_per_100k, color = factor(wave), group = state)) + # create the plot with date on the x and rates on the y, colored by region and grouped by state
+  geom_line() + # add lines
+  labs(x = "Date", y ="Diff. in Covid 19 Deaths and Excess Deaths per 100,000 People", 
+       title = "Unexplained Deaths per 100,000 People Over Time", 
+       color = "Wave")
+```
+Figure 3: Unexplained Deaths per 100,000 People Over Time. 
 
 ## Discussion
