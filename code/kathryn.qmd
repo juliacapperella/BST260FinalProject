@@ -131,7 +131,7 @@ dat <- dates_and_pop |> left_join(cases, by = c("state", "mmwr_year", "mmwr_week
 
 
 dat <- dat %>%
-  mutate(expected_deaths = (percent_of_expected_deaths/100)*total_deaths,
+  mutate(expected_deaths = total_deaths / (percent_of_expected_deaths/100),
          excess_mort = total_deaths - expected_deaths)
 
 saveRDS(dat, "../data/covid_with_pop.rds") # save an RDS file in the data directory
@@ -312,6 +312,127 @@ full_pop %>%
   facet_wrap(~ year) +   # facet by year
   theme_minimal() +
   theme(axis.text.y = element_blank()) 
+```
+
+```{r}
+# excess mortality per 100k per week per state
+dat_waves |> filter(!is.na(wave)) |>
+  mutate(ex_mort_per_100k = excess_mort / population * 100000)
+
+# plot of excess mortality over time for each state
+dat_waves |> filter(!is.na(wave)) |>
+  mutate(ex_mort_per_100k = excess_mort / population * 100000) |>
+ggplot(aes(x=date, y=ex_mort_per_100k, color = factor(wave), group = state)) + # create the plot with date on the x and rates on the y, colored by region and grouped by state
+  geom_line() + # add lines
+  labs(x = "Date", y ="Excess Mortality Rate per 100,000 People", 
+       title = "Excess Mort", 
+       color = "Wave")
+
+
+# Excess Mortality Rates by Wave
+# WAVE 1
+wave_1_em <- dat_waves |>
+  filter(wave == 1, !is.na(covid_deaths)) |> 
+  group_by(state) |>
+  summarize(em_rate_per_100k = mean(excess_mort / population * 100000))
+
+# WAVE 2
+wave_2_em <- dat_waves |>
+  filter(wave == 2, !is.na(covid_deaths)) |> 
+  group_by(state) |>
+  summarize(em_rate_per_100k = mean(excess_mort / population * 100000))
+
+# WAVE 3
+wave_3_em <- dat_waves |>
+  filter(wave == 3, !is.na(covid_deaths)) |> 
+  group_by(state) |>
+  summarize(em_rate_per_100k = mean(excess_mort / population * 100000))
+
+# WAVE 4
+wave_4_em <- dat_waves |>
+  filter(wave == 4, !is.na(covid_deaths)) |> 
+  group_by(state) |>
+  summarize(em_rate_per_100k = mean(excess_mort / population * 100000))
+
+# WAVE 5
+wave_5_em <- dat_waves |>
+  filter(wave == 5, !is.na(covid_deaths)) |> 
+  group_by(state) |>
+  summarize(em_rate_per_100k = mean(excess_mort / population * 100000))
+
+# these plots are just the excess mortality rate, without covid 19 deaths subtracted off
+wave_1_em |>
+  ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Excess Mortality Rate by State for Wave 1",
+       x = "State", 
+       y = "Excess Mortality Rate per 100k") +
+  coord_flip()  # flip coordinates
+
+wave_2_em |>
+  ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Excess Mortality Rate by State for Wave 1",
+       x = "State", 
+       y = "Excess Mortality Rate per 100k") +
+  coord_flip()  # flip coordinates
+
+wave_3_em |>
+  ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Excess Mortality Rate by State for Wave 1",
+       x = "State", 
+       y = "Excess Mortality Rate per 100k") +
+  coord_flip()  # flip coordinates
+
+wave_4_em |>
+  ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Excess Mortality Rate by State for Wave 1",
+       x = "State", 
+       y = "Excess Mortality Rate per 100k") +
+  coord_flip()  # flip coordinates
+
+wave_5_em |>
+  ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Excess Mortality Rate by State for Wave 1",
+       x = "State", 
+       y = "Excess Mortality Rate per 100k") +
+  coord_flip()  # flip coordinates
+```
+
+
+``` {r}
+# does covid explain it?
+dat_waves |> filter(!is.na(wave)) |>
+  mutate(death_diff = covid_deaths - excess_mort) |>
+  mutate(diff_per_100k = death_diff / population * 100000)
+
+# centered around 0 --> covid prob explains it
+dat_waves |> filter(!is.na(wave)) |>
+    mutate(death_diff = covid_deaths - excess_mort) |>
+  mutate(diff_per_100k = death_diff / population * 100000) |>
+ggplot(aes(x=date, y=diff_per_100k, color = factor(wave), group = state)) + # create the plot with date on the x and rates on the y, colored by region and grouped by state
+  geom_line() + # add lines
+  labs(x = "Date", y ="Excess Mortality Rate per 100,000 People", 
+       title = "Excess Mort", 
+       color = "Wave")
+
+# differences by state
+wave_5_em_diff <- dat_waves |>
+  filter(wave == 5, !is.na(covid_deaths)) |> 
+    mutate(death_diff = covid_deaths - excess_mort) |>
+  group_by(state) |>
+  summarize(diff_per_100k = mean(death_diff / population * 100000)) 
+
+wave_5_em_diff |>
+  ggplot(aes(x = reorder(state, diff_per_100k), y = diff_per_100k)) +  # reorder state, assign aesthetic mapping
+  geom_col(position = "dodge") + # use geom_col to plot barplot
+  labs(title = "Unexplained Mortality by State for Wave 1",
+       x = "State", 
+       y = "Unexplained Mortality per 100k") +
+  coord_flip()  # flip coordinates
 ```
 
 Extra Covid Stuff
