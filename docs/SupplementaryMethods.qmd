@@ -426,7 +426,7 @@ wave_1_em |>
 wave_2_em |>
   ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Excess Mortality Rate by State for Wave 1",
+  labs(title = "Excess Mortality Rate by State for Wave 2",
        x = "State", 
        y = "Excess Mortality Rate per 100k") +
   coord_flip()  # flip coordinates
@@ -434,7 +434,7 @@ wave_2_em |>
 wave_3_em |>
   ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Excess Mortality Rate by State for Wave 1",
+  labs(title = "Excess Mortality Rate by State for Wave 3",
        x = "State", 
        y = "Excess Mortality Rate per 100k") +
   coord_flip()  # flip coordinates
@@ -442,7 +442,7 @@ wave_3_em |>
 wave_4_em |>
   ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Excess Mortality Rate by State for Wave 1",
+  labs(title = "Excess Mortality Rate by State for Wave 4",
        x = "State", 
        y = "Excess Mortality Rate per 100k") +
   coord_flip()  # flip coordinates
@@ -450,7 +450,7 @@ wave_4_em |>
 wave_5_em |>
   ggplot(aes(x = reorder(state, em_rate_per_100k), y = em_rate_per_100k)) +  # reorder state, assign aesthetic mapping
   geom_col(position = "dodge") + # use geom_col to plot barplot
-  labs(title = "Excess Mortality Rate by State for Wave 1",
+  labs(title = "Excess Mortality Rate by State for Wave 5",
        x = "State", 
        y = "Excess Mortality Rate per 100k") +
   coord_flip()  # flip coordinates

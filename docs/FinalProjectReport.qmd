@@ -217,7 +217,7 @@ ggplot(aes(x=date, y=ex_mort_per_100k, color = factor(wave), group = state)) + #
 ```
 Figure 2: Excess Deaths per 100,000 people over time. 
 
-```{r echo = FALSE}
+```{r warning = FALSE, echo = FALSE}
 # centered around 0 --> covid prob explains it
 dat_waves |> filter(!is.na(wave)) |>
     mutate(death_diff = covid_deaths - excess_mort) |>
