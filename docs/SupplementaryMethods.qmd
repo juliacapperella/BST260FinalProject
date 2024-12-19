@@ -12,11 +12,19 @@ editor: visual
 
 ### Equations
 
-Equation 1: Rate Calculation
+Equation 1: Population Calculation
+$$
+\mbox{growth rate} = \frac{population_{2021} - population_{2020}}{population_{2020}}
+$$
+$$
+\mbox{population prediction} = population_{2021}*(1+ \mbox{growth_rate})^{(\mbox{years since 2021)}}
+$$
+
+Equation 2: Rate Calculation
 $$
 \mbox{rate per 100,000 people} = 100000 * \frac{\mbox{count}}{\mbox{population}}
 $$
-Equation 2: Excess Mortality Calculations
+Equation 3: Excess Mortality Calculations
 $$
 \mbox{expected deaths} = \frac{\mbox{total deaths}}{\frac{\mbox{percent of expected deaths}}{100}} 
 $$
