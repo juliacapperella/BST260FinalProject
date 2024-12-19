@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Julia Capperella, Grace Gaultier, Kathryn Saxton">
 
-<title>FinalProjectReport</title>
+<title>BST 260 Final Project</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,16 +24,16 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="FinalProjectReport_files/libs/clipboard/clipboard.min.js"></script>
-<script src="FinalProjectReport_files/libs/quarto-html/quarto.js"></script>
-<script src="FinalProjectReport_files/libs/quarto-html/popper.min.js"></script>
-<script src="FinalProjectReport_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="FinalProjectReport_files/libs/quarto-html/anchor.min.js"></script>
-<link href="FinalProjectReport_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="FinalProjectReport_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="FinalProjectReport_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="FinalProjectReport_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="FinalProjectReport_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="final-project_files/libs/clipboard/clipboard.min.js"></script>
+<script src="final-project_files/libs/quarto-html/quarto.js"></script>
+<script src="final-project_files/libs/quarto-html/popper.min.js"></script>
+<script src="final-project_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="final-project_files/libs/quarto-html/anchor.min.js"></script>
+<link href="final-project_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="final-project_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="final-project_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="final-project_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="final-project_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -45,13 +46,19 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">FinalProjectReport</h1>
+<h1 class="title">BST 260 Final Project</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Julia Capperella, Grace Gaultier, Kathryn Saxton </p>
+          </div>
+  </div>
     
   
     
@@ -60,8 +67,8 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<section id="bst-210-final-project" class="level1">
-<h1>BST 210: Final Project</h1>
+<section id="bst-260-final-project" class="level1">
+<h1>BST 260: Final Project</h1>
 <p><em>Julia Capperella, Grace Gaultier, Kathryn Saxton</em></p>
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
@@ -88,7 +95,7 @@ ul.task-list li input[type="checkbox"] {
 <p>The first step for analyzing the pandemic is to divide the entire pandemic into waves, corresponding to seasonal surges. Figure 1 shows weekly case, death and hospitalization rates over time. Each state is represented by a single line on the plot, and waves are designated by different colors. Waves were selected based on peaks in cases, deaths, and hospitalizations, which were roughly aligned temporally. There are five major peaks (or clusters of smaller peaks) shown in Figure 1 (and SI Figure 1) designated as waves. Wave 1 extends from March 1, 2020 to August 31, 2020, Wave 2 from September 1, 2020 to May 31, 2021, Wave 3 from June 1, 2021 to November 30, 2021, Wave 4 from December 1, 2021 to March 31, 2022 and Wave 5 from April 1, 2022 to July 31, 2023.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="FinalProjectReport_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+<p><img src="final-project_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p><em>Figure 1: COVID-19 Pandemic Divided into 5 Waves.</em></p>
@@ -223,7 +230,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Next, excess mortality for each week for each state was calculated (SI Equation 3). The results are shown in Figure 2, with each individual line representing a state.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="FinalProjectReport_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+<p><img src="final-project_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p><em>Figure 2: Excess Deaths per 100,000 people over time.</em></p>
@@ -231,7 +238,7 @@ ul.task-list li input[type="checkbox"] {
 <p>These surges in excess mortality align with pandemic peaks. When deaths attributed to COVID-19 are subtracted from the excess mortality counts, the remaining unexplained deaths are close to 0, as seen in Figure 3, which displays differences centered about 0. Supplementary Figures 7-11 shows a breakdown of the differences by wave.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="FinalProjectReport_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+<p><img src="final-project_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p><em>Figure 3: Unexplained Deaths per 100,000 People Over Time.</em></p>
@@ -366,7 +373,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Virulence analysis over time reveals a similar trend for all three measures of virulence – deaths per cases, hospitalizations for cases, and deaths per hospitalizations. The results of the visualization can be seen in Figure 4.</p>
 <div class="cell">
 <div class="cell-output-display">
-<p><img src="FinalProjectReport_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
+<p><img src="final-project_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p><em>Figure 4: COVID-19 Virulence Rates per 100,000 People Over Time.</em></p>
