@@ -257,7 +257,7 @@ Lowest 5 Average Excess Mortality Rates
 
 Table 2: Average Weekly Excess Mortality Rates by Wave. Average weekly excess mortality rates per 100,000 people are given in parentheses.
 
-```{r, warning = FALSE}
+```{r, warning = FALSE, echo=FALSE}
 # plot of virulence over time
 dat_waves |> filter(!is.na(wave), !is.na(cases), !is.na(hosp), !is.na(covid_deaths)) %>%
   mutate(case_rate = cases / population * 100000, # calculate case rate
