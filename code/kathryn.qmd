@@ -135,7 +135,6 @@ dat <- dat %>%
          excess_mort = total_deaths - expected_deaths)
 
 saveRDS(dat, "../data/covid_with_pop.rds") # save an RDS file in the data directory
-
 ```
 
 ```{r}
@@ -171,7 +170,7 @@ dat |>
                names_to = "type", values_to = "rates") |> # change the format of the table for plotting
   ggplot(aes(x=date, y=rates)) + # create the plot with date on the x and rates on the y, colored by region and grouped by state
   geom_line() + # add lines
-  labs(x = "Date", y ="Weighted Averafe Rate per 100,000 People", 
+  labs(x = "Date", y ="Weighted Average Rate per 100,000 People", 
        title = "Covid 19 Cases, Deaths and Hospitalizations per 100,000 People Over Time", 
        color = "Region") +
   facet_wrap(~type, ncol = 1, scales = "free_y") # stack the plots vertically and adjust y axis
@@ -300,7 +299,6 @@ wave_4_dr |> arrange(death_rate_per_100k)
 wave_5_dr |> arrange(desc(death_rate_per_100k))
 wave_5_dr |> arrange(death_rate_per_100k)
 ```
-
 
 ```{r}
 #Population by state
