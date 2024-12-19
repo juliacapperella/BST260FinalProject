@@ -401,7 +401,29 @@ wave_5_em |>
        y = "Excess Mortality Rate per 100k") +
   coord_flip()  # flip coordinates
 ```
+```{r}
+# Top 5 / Bottom 5 per Wave
 
+# Wave 1
+wave_1_em |> arrange(desc(em_rate_per_100k))
+wave_1_em |> arrange(em_rate_per_100k)
+
+# Wave 2
+wave_2_em |> arrange(desc(em_rate_per_100k))
+wave_2_em |> arrange(em_rate_per_100k)
+
+# Wave 3
+wave_3_em |> arrange(desc(em_rate_per_100k))
+wave_3_em |> arrange(em_rate_per_100k)
+
+# Wave 4
+wave_4_em |> arrange(desc(em_rate_per_100k))
+wave_4_em |> arrange(em_rate_per_100k)
+
+# Wave 5
+wave_5_em |> arrange(desc(em_rate_per_100k))
+wave_5_em |> arrange(em_rate_per_100k)
+```
 
 ``` {r}
 # does covid explain it?
