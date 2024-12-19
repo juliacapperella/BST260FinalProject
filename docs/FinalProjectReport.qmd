@@ -230,4 +230,26 @@ ggplot(aes(x=date, y=diff_per_100k, color = factor(wave), group = state)) + # cr
 ```
 Figure 3: Unexplained Deaths per 100,000 People Over Time. 
 
+Highest 5 Average Excess Mortality Rates
+
+|  | Wave 1 |  Wave 2 | Wave 3 | Wave 4 | Wave 5 |
+|--|--------|--------|--------|--------|--------|
+| #1 | New Jersey (7.63) | South Dakota (6.96) | West Virginia (8.48) | New Mexico (8.05) | Maine (3.28) |
+| #2 | Washington D.C. (6.63) | North Dakota (6.57) | Wyoming (8.35) | West Virginia (8.00) | Delaware (3.20) |
+| #3 | Louisiana (6.09) | New Mexico (5.65) | Arkansas (7.96) | Arizona (7.28) |  West Virginia (3.15) |
+| #4 | Mississippi (5.82) | Wyoming (5.61) | Montana (7.72) | Tennessee (6.29) | Puerto Rico (3.11) |
+| #5 | Connecticut (5.81)| Mississippi (5.58) | Florida (6.76) | Kentucky (6.22) | Vermont (3.03) |
+
+Lowest 5 Average Excess Mortality Rates
+
+|  | Wave 1 |  Wave 2 | Wave 3 | Wave 4 | Wave 5 |
+|--|--------|--------|--------|--------|--------|
+| #1 |Hawaii (0.04) | Massachusetts (1.00) | Massachusetts (1.06) | New York (1.94) | New Jersey (0.45) |
+| #2 | Arkansas (0.26) | Hawaii (1.17) | New York (1.24) | Massachusetts (2.20) | Pennsylvania (0.69) |
+| #3 | Maine (0.45) | Vermont (1.21) | New Jersey (1.26) | Hawaii (2.90) | Maine (0.70) |
+| #4 | Wyoming (0.63) | New York (1.54) | Maryland (1.80) | California (3.03) | New York (0.72) |
+| #5 | Massachusetts (4.78)| Washington (1.62) | Connecticut (1.87) | New Jersey (3.04) | Washington D.C. (0.81) |
+
+Table 2: Average Weekly Excess Mortality Rates by Wave. Average weekly excess mortality rates per 100,000 people are given in parentheses.
+
 ## Discussion
